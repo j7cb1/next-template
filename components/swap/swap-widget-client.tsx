@@ -1,13 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { WalletStatus } from './wallet-status'
+import { TokenInput } from './token-input'
+import { SwapDirectionButton } from './swap-direction-button'
 import { useSupportedTokens } from '@/use-cases/swap/get-supported-tokens/use-supported-tokens'
 import type { Token } from '@/repositories/swap/swap-schema'
-import { IconArrowsExchange } from '@tabler/icons-react'
+import { IconWallet } from '@tabler/icons-react'
 
 export function SwapWidgetClient() {
   const { primaryWallet, setShowAuthFlow } = useDynamicContext()
@@ -16,77 +17,88 @@ export function SwapWidgetClient() {
   const [fromToken, setFromToken] = useState<Token | null>(null)
   const [toToken, setToToken] = useState<Token | null>(null)
   const [amount, setAmount] = useState('')
-  const [slippage, setSlippage] = useState(0.5)
+  const [flipped, setFlipped] = useState(false)
 
   const walletAddress = primaryWallet?.address
+  const tokens = useMemo(
+    () => (Array.isArray(tokensQuery.data) ? tokensQuery.data : []),
+    [tokensQuery.data],
+  )
 
-  const handleSwapDirection = () => {
+  const handleSwapDirection = useCallback(() => {
     setFromToken(toToken)
     setToToken(fromToken)
     setAmount('')
-  }
+    setFlipped((prev) => !prev)
+  }, [fromToken, toToken])
+
+  const canSwap = walletAddress && fromToken && toToken && parseFloat(amount) > 0
+
+  const actionLabel = useMemo(() => {
+    if (!walletAddress) return null
+    if (!fromToken || !toToken) return 'Select tokens'
+    if (!amount || parseFloat(amount) <= 0) return 'Enter amount'
+    return 'Swap'
+  }, [walletAddress, fromToken, toToken, amount])
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-lg">Swap</CardTitle>
+    <div className="rounded-xl border border-emerald-600/20 bg-card/80 backdrop-blur-sm text-card-foreground overflow-hidden shadow-[0_0_40px_rgba(5,150,105,0.06)]">
+      {/* Header */}
+      <div className="flex items-center justify-end px-5 pt-5 pb-4">
         <WalletStatus />
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* From token row */}
-        <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
-          <span className="text-xs text-muted-foreground">From</span>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" className="min-w-28 justify-start">
-              {fromToken ? fromToken.symbol : 'Select token'}
-            </Button>
-            <input
-              type="text"
-              inputMode="decimal"
-              placeholder="0.0"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="flex-1 bg-transparent text-right text-2xl font-medium outline-none placeholder:text-muted-foreground/50"
-            />
-          </div>
-        </div>
+      </div>
 
-        {/* Direction toggle */}
-        <div className="flex justify-center -my-2 relative z-10">
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8 rounded-full"
+      {/* Token inputs with bridging swap button */}
+      <div className="px-4 pb-1">
+        <div className="flex flex-col">
+          <TokenInput
+            label="You pay"
+            token={fromToken}
+            onTokenSelect={setFromToken}
+            amount={amount}
+            onAmountChange={setAmount}
+            tokens={tokens}
+            disabledToken={toToken}
+            isLoadingTokens={tokensQuery.isLoading}
+          />
+
+          <SwapDirectionButton
             onClick={handleSwapDirection}
-          >
-            <IconArrowsExchange className="h-4 w-4 rotate-90" />
-          </Button>
-        </div>
+            flipped={flipped}
+          />
 
-        {/* To token row */}
-        <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
-          <span className="text-xs text-muted-foreground">To</span>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" className="min-w-28 justify-start">
-              {toToken ? toToken.symbol : 'Select token'}
-            </Button>
-            <div className="flex-1 text-right text-2xl font-medium text-muted-foreground/50">
-              0.0
-            </div>
-          </div>
+          <TokenInput
+            label="You receive"
+            token={toToken}
+            onTokenSelect={setToToken}
+            amount=""
+            readOnly
+            tokens={tokens}
+            disabledToken={fromToken}
+            isLoadingTokens={tokensQuery.isLoading}
+          />
         </div>
+      </div>
 
-        {/* Action button */}
+      {/* Action */}
+      <div className="px-4 pt-3 pb-4">
         {!walletAddress ? (
-          <Button className="w-full" size="lg" onClick={() => setShowAuthFlow(true)}>
+          <Button
+            className="w-full h-11 text-sm font-semibold cursor-pointer"
+            onClick={() => setShowAuthFlow(true)}
+          >
+            <IconWallet className="size-4" />
             Connect Wallet
           </Button>
         ) : (
-          <Button className="w-full" size="lg" disabled>
-            Select tokens to swap
+          <Button
+            className="w-full h-11 text-sm font-semibold"
+            disabled={!canSwap}
+          >
+            {actionLabel}
           </Button>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

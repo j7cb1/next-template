@@ -1,6 +1,5 @@
 'use client'
 
-import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { IconAlertTriangle } from '@tabler/icons-react'
 
@@ -11,21 +10,21 @@ type SwapWidgetErrorProps = {
 
 export function SwapWidgetError({ error, reset }: SwapWidgetErrorProps) {
   return (
-    <Card>
-      <CardContent className="flex flex-col items-center justify-center gap-4 py-12">
-        <IconAlertTriangle className="h-10 w-10 text-destructive" />
+    <div className="rounded-xl border border-emerald-600/20 bg-card/80 backdrop-blur-sm text-card-foreground overflow-hidden shadow-[0_0_40px_rgba(5,150,105,0.06)]">
+      <div className="flex flex-col items-center justify-center gap-4 px-5 py-16">
+        <IconAlertTriangle className="size-10 text-destructive" />
         <div className="text-center space-y-1">
-          <p className="font-medium">Failed to load swap widget</p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm font-medium">Failed to load swap widget</p>
+          <p className="text-xs text-muted-foreground">
             {error?.message ?? 'An unexpected error occurred'}
           </p>
         </div>
         {reset && (
-          <Button variant="outline" onClick={reset}>
+          <Button variant="outline" onClick={reset} className="h-9 px-4 text-xs">
             Try Again
           </Button>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
