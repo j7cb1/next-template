@@ -1,9 +1,9 @@
-import { PageHeader } from '@/components/dashboard/page-header'
+import { SwapWidgetServer } from '@/components/swap/swap-widget-server'
 
-export default async function DashboardPage() {
+export default async function HomePage() {
   return (
-    <div>
-      <PageHeader title="Dashboard" description="Welcome to your dashboard" />
+    <div className="w-full max-w-md">
+      <SwapWidgetServer />
     </div>
   )
 }
