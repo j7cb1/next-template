@@ -96,6 +96,13 @@ export function SwapWidgetClient() {
 
   const isQuoteLoading = quoteQuery.isFetching && !!debouncedAmount && parseFloat(debouncedAmount) > 0
 
+  // Surface quote errors on the output field instead of showing silent "0.0"
+  const quoteError = useMemo(() => {
+    if (!quoteQuery.isError || isQuoteLoading) return null
+    if (!debouncedAmount || parseFloat(debouncedAmount) <= 0) return null
+    return quoteQuery.error?.message || 'No route available'
+  }, [quoteQuery.isError, quoteQuery.error, isQuoteLoading, debouncedAmount])
+
   // Balance check for sell token
   const balanceQuery = useWalletBalance(walletAddress, fromToken)
   const insufficientBalance = useMemo(() => {
@@ -215,7 +222,7 @@ export function SwapWidgetClient() {
             disabledToken={toToken}
             isLoadingTokens={tokensQuery.isLoading}
             isLoadingQuote={isQuoteLoading}
-            usdValue={sellUsd}
+            usdValue={quoteError ? undefined : sellUsd}
           />
 
           <SwapDirectionButton
@@ -234,6 +241,7 @@ export function SwapWidgetClient() {
             isLoadingTokens={tokensQuery.isLoading}
             isLoadingQuote={isQuoteLoading}
             usdValue={buyUsd}
+            error={quoteError}
           />
         </div>
       </div>
@@ -305,7 +313,7 @@ export function SwapWidgetClient() {
         )}
       </div>
     </div>
-    {fromToken && toToken && parseFloat(amount) > 0 ? (
+    {fromToken && toToken && parseFloat(amount) > 0 && !quoteError ? (
       <SwapDetails
         route={bestRoute ?? null}
         fromToken={fromToken}

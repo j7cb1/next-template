@@ -18,6 +18,7 @@ type TokenInputProps = {
   isLoadingTokens?: boolean
   isLoadingQuote?: boolean
   usdValue?: string
+  error?: string | null
   className?: string
 }
 
@@ -44,6 +45,7 @@ export function TokenInput({
   isLoadingTokens,
   isLoadingQuote,
   usdValue,
+  error,
   className,
 }: TokenInputProps) {
   const handleAmountChange = useCallback(
@@ -82,6 +84,10 @@ export function TokenInput({
           {readOnly ? (
             isLoadingQuote ? (
               <Skeleton className="h-8 w-28 rounded-lg" />
+            ) : error ? (
+              <div className="w-full text-right text-sm font-medium text-muted-foreground/60 truncate">
+                {error}
+              </div>
             ) : (
               <div
                 className={cn(
@@ -107,7 +113,7 @@ export function TokenInput({
             <Skeleton className="h-4 w-14 rounded" />
           ) : (
             <span className="text-xs text-muted-foreground tabular-nums h-4">
-              {usdValue ? `~${usdValue}` : '$0.00'}
+              {error ? '' : usdValue ? `~${usdValue}` : '$0.00'}
             </span>
           )}
         </div>
