@@ -8,7 +8,7 @@ const cspDirectives = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://raw.githubusercontent.com https://storage.googleapis.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://api.swapkit.dev https://api.frankfurter.dev https://eu.i.posthog.com https://eu-assets.i.posthog.com https://us.i.posthog.com https://verify.walletconnect.com https://explorer-api.walletconnect.com wss://relay.walletconnect.com wss://relay.walletconnect.org",
+  "connect-src 'self' https://api.swapkit.dev https://api.frankfurter.dev https://eu.i.posthog.com https://eu-assets.i.posthog.com https://us.i.posthog.com https://verify.walletconnect.com https://explorer-api.walletconnect.com wss://relay.walletconnect.com wss://relay.walletconnect.org https://eth.merkle.io https://56.rpc.thirdweb.com https://arb1.arbitrum.io https://mainnet.base.org https://mainnet.optimism.io https://api.avax.network https://polygon-rpc.com https://rpc.gnosischain.com",
   "frame-src 'self' https://verify.walletconnect.com",
   "object-src 'none'",
   "base-uri 'self'",

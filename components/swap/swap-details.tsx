@@ -44,8 +44,11 @@ function formatNumber(value: string | number, maxDecimals = 6): string {
 }
 
 function ValueOrSkeleton({ loading, width = 'w-16', children }: { loading?: boolean; width?: string; children: React.ReactNode }) {
-  if (loading) return <Skeleton className={cn('h-3 rounded', width)} />
-  return <>{children}</>
+  return (
+    <span className="inline-flex items-center h-4">
+      {loading ? <Skeleton className={cn('h-3 rounded', width)} /> : children}
+    </span>
+  )
 }
 
 export function SwapDetails({ route, fromToken, toToken, sellAmount, slippage, onSlippageChange, open, onOpenChange, isLoading }: SwapDetailsProps) {
@@ -120,7 +123,7 @@ export function SwapDetails({ route, fromToken, toToken, sellAmount, slippage, o
         type="button"
         onClick={() => onOpenChange(!open)}
         aria-label="Toggle swap details"
-        className="w-full flex items-center gap-1.5 py-1.5 text-xs text-muted-foreground hover:text-foreground/70 transition-colors cursor-pointer"
+        className="w-full flex items-center gap-1.5 h-[30px] text-xs text-muted-foreground hover:text-foreground/70 transition-colors cursor-pointer"
       >
         <ValueOrSkeleton loading={loading} width="w-12">
           <span className="tabular-nums font-medium">

@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { useAccount, useWalletClient } from 'wagmi'
+import { useAccount, useWalletClient, useSwitchChain } from 'wagmi'
 import { useConnectModal } from '@rainbow-me/rainbowkit'
 import { WalletStatus } from './wallet-status'
 import { TokenInput } from './token-input'
@@ -14,6 +14,7 @@ import { useSwapQuote } from '@/use-cases/swap/get-swap-quote/use-swap-quote'
 import { useExecuteSwap } from '@/use-cases/swap/execute-swap/use-execute-swap'
 import { useTrackSwap } from '@/use-cases/swap/track-swap/use-track-swap'
 import { useWalletBalance } from '@/hooks/use-wallet-balance'
+import { CHAIN_MAP } from '@/utilities/chain-map'
 import { useDebounce } from '@/hooks/use-debounce'
 import { cn } from '@/utilities/shadcn'
 import { useFormatCurrency } from '@/hooks/use-format-currency'
@@ -23,42 +24,36 @@ import { IconWallet } from '@tabler/icons-react'
 const DEFAULT_FROM = 'ETH.ETH'
 const DEFAULT_TO = 'ETH.USDC-0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
 
-// Animation constants hoisted to module scope to avoid re-creation on every render
-const GLOW_ANIMATE = {
+const BUTTON_SHADOW = '0 1px 3px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.12)'
+
+const BUTTON_PULSE = {
   boxShadow: [
-    '0 0 20px rgba(16,185,129,0.20), 0 4px 6px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.10)',
-    '0 0 28px rgba(16,185,129,0.30), 0 4px 6px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.10)',
-    '0 0 20px rgba(16,185,129,0.20), 0 4px 6px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.10)',
+    BUTTON_SHADOW,
+    `0 0 20px rgba(16,185,129,0.18), 0 2px 4px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.12)`,
+    BUTTON_SHADOW,
   ],
 }
 
-const GLOW_TRANSITION = {
-  duration: 2.5,
+const BUTTON_PULSE_TRANSITION = {
+  duration: 3,
   repeat: Infinity,
   ease: 'easeInOut' as const,
 }
 
-const GLOW_TRANSITION_NO_REPEAT = {
-  duration: 2.5,
-  repeat: 0,
-  ease: 'easeInOut' as const,
+const BUTTON_HOVER = {
+  scale: 1.015,
+  boxShadow: '0 0 24px rgba(16,185,129,0.25), 0 4px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.2)',
 }
 
-const NO_GLOW = { boxShadow: 'none' }
-
-const GLOW_HOVER = {
-  backgroundColor: 'rgb(52, 211, 153)',
-  boxShadow: '0 0 40px rgba(16,185,129,0.40), 0 6px 12px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.15)',
-}
-
-const GLOW_TAP = {
-  backgroundColor: 'rgb(5, 150, 105)',
-  boxShadow: '0 0 12px rgba(16,185,129,0.15), 0 1px 2px rgba(0,0,0,0.10), inset 0 2px 4px rgba(0,0,0,0.25)',
+const BUTTON_TAP = {
+  scale: 0.985,
+  boxShadow: '0 1px 1px rgba(0,0,0,0.1), inset 0 2px 4px rgba(0,0,0,0.15)',
 }
 
 export function SwapWidgetClient() {
-  const { address: walletAddress, isConnected } = useAccount()
+  const { address: walletAddress, isConnected, chainId: walletChainId } = useAccount()
   const { data: walletClient } = useWalletClient()
+  const { switchChainAsync } = useSwitchChain()
   const { openConnectModal } = useConnectModal()
   const prefersReducedMotion = useReducedMotion()
   const formatCurrency = useFormatCurrency()
@@ -182,6 +177,19 @@ export function SwapWidgetClient() {
   async function handleSwap() {
     if (!bestRoute || !walletAddress || !walletClient || !fromToken || swapMutation.isPending) return
 
+    const requiredChain = CHAIN_MAP[fromToken.chain]
+    if (requiredChain && walletChainId !== requiredChain.id) {
+      try {
+        toast.loading('Switching network...', { id: 'swap-status' })
+        setStatusAnnouncement('Switching network')
+        await switchChainAsync({ chainId: requiredChain.id })
+      } catch {
+        toast.error('Network switch rejected', { id: 'swap-status' })
+        setStatusAnnouncement('Network switch rejected')
+        return
+      }
+    }
+
     toast.loading('Building transaction...', { id: 'swap-status' })
     setStatusAnnouncement('Building transaction')
 
@@ -201,9 +209,8 @@ export function SwapWidgetClient() {
           setStatusAnnouncement('Transaction submitted')
         },
         onError: (err) => {
-          const msg = err.message || 'Swap failed'
-          toast.error(msg, { id: 'swap-status' })
-          setStatusAnnouncement(msg)
+          toast.error(err.message || 'Swap failed', { id: 'swap-status' })
+          setStatusAnnouncement(err.message || 'Swap failed')
         },
       },
     )
@@ -222,15 +229,20 @@ export function SwapWidgetClient() {
 
   const actionLabel = useMemo(() => {
     if (!isConnected) return null
-    if (isSwapping) return 'Swapping...'
-    if (isTracking) return 'Pending...'
+    if (isSwapping) return 'Swapping'
+    if (isTracking) return 'Pending'
     if (!fromToken || !toToken) return 'Select tokens'
     if (!amount || parseFloat(amount) <= 0) return 'Enter amount'
+    if (isQuoteLoading) return 'Fetching quote'
     if (insufficientBalance) return 'Insufficient balance'
-    if (isQuoteLoading) return 'Fetching quote...'
     if (quoteQuery.isError) return 'No route found'
     return 'Swap'
   }, [isConnected, fromToken, toToken, amount, isQuoteLoading, quoteQuery.isError, isSwapping, isTracking, insufficientBalance])
+
+  const isActiveLoading = isSwapping || isTracking
+  const isInactiveLoading = isQuoteLoading
+  const isButtonLoading = isActiveLoading || isInactiveLoading
+  const isButtonActive = canSwap || isActiveLoading
 
   return (
     <>
@@ -283,14 +295,13 @@ export function SwapWidgetClient() {
           <motion.button
             type="button"
             onClick={() => openConnectModal?.()}
-            className="relative w-full h-12 rounded-2xl text-sm font-bold cursor-pointer overflow-hidden bg-emerald-500 text-white focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
-            animate={GLOW_ANIMATE}
-            whileHover={GLOW_HOVER}
-            whileTap={GLOW_TAP}
-            transition={prefersReducedMotion ? GLOW_TRANSITION_NO_REPEAT : GLOW_TRANSITION}
+            className="relative w-full h-12 rounded-2xl text-sm font-bold cursor-pointer overflow-hidden bg-gradient-to-b from-emerald-400 to-emerald-600 text-white focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-card focus-visible:outline-none"
+            animate={BUTTON_PULSE}
+            whileHover={BUTTON_HOVER}
+            whileTap={BUTTON_TAP}
+            transition={prefersReducedMotion ? { duration: 0 } : BUTTON_PULSE_TRANSITION}
           >
-            {/* Inner light bar */}
-            <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/[0.10] to-transparent rounded-t-2xl pointer-events-none" />
+            <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/[0.15] to-transparent rounded-t-2xl pointer-events-none" />
             <span className="relative flex items-center justify-center gap-2">
               <IconWallet className="size-4" />
               Connect Wallet
@@ -302,18 +313,36 @@ export function SwapWidgetClient() {
             disabled={!canSwap}
             onClick={handleSwap}
             className={cn(
-              'relative w-full h-12 rounded-2xl text-sm font-bold overflow-hidden focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none',
-              canSwap
-                ? 'bg-emerald-500 text-white cursor-pointer'
-                : 'bg-muted text-muted-foreground cursor-not-allowed',
+              'relative w-full h-12 rounded-2xl text-sm font-bold overflow-hidden focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-card focus-visible:outline-none',
+              isButtonActive
+                ? 'bg-gradient-to-b from-emerald-400 to-emerald-600 text-white'
+                : 'bg-muted/80 text-muted-foreground cursor-not-allowed border border-border',
+              canSwap && 'cursor-pointer',
+              isButtonLoading && 'cursor-wait',
             )}
-            animate={canSwap ? GLOW_ANIMATE : NO_GLOW}
-            whileHover={canSwap ? GLOW_HOVER : undefined}
-            whileTap={canSwap ? GLOW_TAP : undefined}
-            transition={canSwap && !prefersReducedMotion ? GLOW_TRANSITION : GLOW_TRANSITION_NO_REPEAT}
+            animate={
+              isButtonActive
+                ? { boxShadow: BUTTON_SHADOW }
+                : { boxShadow: 'none', scale: 1 }
+            }
+            whileHover={canSwap ? BUTTON_HOVER : undefined}
+            whileTap={canSwap ? BUTTON_TAP : undefined}
+            transition={isButtonActive && !prefersReducedMotion ? BUTTON_PULSE_TRANSITION : { duration: 0 }}
           >
-            {canSwap && (
-              <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/[0.10] to-transparent rounded-t-2xl pointer-events-none" />
+            {isButtonActive && (
+              <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/[0.15] to-transparent rounded-t-2xl pointer-events-none" />
+            )}
+            {isButtonLoading && (
+              <motion.div
+                className="absolute inset-0 pointer-events-none rounded-2xl"
+                style={{
+                  background: isActiveLoading
+                    ? 'linear-gradient(100deg, transparent 20%, rgba(255,255,255,0.4) 45%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.4) 55%, transparent 80%)'
+                    : 'linear-gradient(100deg, transparent 20%, rgba(128,128,128,0.15) 45%, rgba(128,128,128,0.2) 50%, rgba(128,128,128,0.15) 55%, transparent 80%)',
+                }}
+                animate={{ x: ['-120%', '120%'] }}
+                transition={{ duration: 1, repeat: Infinity, ease: [0.4, 0, 0.2, 1], repeatDelay: 0.15 }}
+              />
             )}
             <span className="relative">{actionLabel}</span>
           </motion.button>

@@ -1,34 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { createPublicClient, formatUnits, http, type Chain, type PublicClient } from 'viem'
-import { mainnet, bsc, arbitrum, base, optimism, avalanche, polygon, gnosis } from 'viem/chains'
+import { useConfig } from 'wagmi'
+import { getPublicClient } from 'wagmi/actions'
+import { formatUnits } from 'viem'
 import type { Token } from '@/repositories/swap/swap-schema'
-
-/** Map SwapKit chain keys → viem chain configs for balance lookups */
-const CHAIN_MAP: Record<string, Chain> = {
-  ETH: mainnet,
-  BSC: bsc,
-  ARB: arbitrum,
-  BASE: base,
-  OP: optimism,
-  AVAX: avalanche,
-  POL: polygon,
-  GNO: gnosis,
-}
-
-/** Cached public clients per chain to reuse viem batching/caching */
-const clientCache = new Map<string, PublicClient>()
-
-function getClient(chainKey: string): PublicClient | null {
-  const chain = CHAIN_MAP[chainKey]
-  if (!chain) return null
-
-  let client = clientCache.get(chainKey)
-  if (!client) {
-    client = createPublicClient({ chain, transport: http() })
-    clientCache.set(chainKey, client)
-  }
-  return client
-}
+import { CHAIN_MAP } from '@/utilities/chain-map'
 
 const ERC20_BALANCE_OF_ABI = [
   {
@@ -40,18 +15,11 @@ const ERC20_BALANCE_OF_ABI = [
   },
 ] as const
 
-/**
- * Fetches the connected wallet's balance for a specific token.
- *
- * Uses a cached viem public client for the token's chain (not the wallet's
- * current chain), so balance is always checked on the correct network.
- *
- * Only works for EVM chains. Non-EVM chains (BTC, SOL, etc.) are skipped.
- */
 export function useWalletBalance(
   walletAddress: string | undefined,
   token: Token | null,
 ) {
+  const config = useConfig()
   const identifier = token?.identifier
   const isErc20 = !!token?.address
 
@@ -59,30 +27,45 @@ export function useWalletBalance(
     queryKey: walletAddress && identifier
       ? ['wallet', 'balance', walletAddress, identifier]
       : ['wallet', 'balance', 'pending'],
-    queryFn: async (): Promise<string | undefined> => {
-      if (!walletAddress || !token) return undefined
+    queryFn: async (): Promise<string> => {
+      console.log('[balance] queryFn called', { walletAddress, chain: token?.chain, identifier, isErc20 })
 
-      const client = getClient(token.chain)
-      if (!client) return undefined
+      if (!walletAddress || !token) throw new Error('Missing wallet or token')
 
-      if (!isErc20) {
-        const raw = await client.getBalance({
-          address: walletAddress as `0x${string}`,
+      const chain = CHAIN_MAP[token.chain]
+      if (!chain) throw new Error(`Unsupported chain: ${token.chain}`)
+
+      const client = getPublicClient(config, { chainId: chain.id })
+      console.log('[balance] public client', { chainId: chain.id, hasClient: !!client })
+      if (!client) throw new Error(`No public client for chain: ${token.chain}`)
+
+      try {
+        if (!isErc20) {
+          const raw = await client.getBalance({
+            address: walletAddress as `0x${string}`,
+          })
+          const formatted = formatUnits(raw, token.decimals ?? 18)
+          console.log('[balance] native balance', { chain: token.chain, raw: raw.toString(), formatted })
+          return formatted
+        }
+
+        const raw = await client.readContract({
+          address: token.address as `0x${string}`,
+          abi: ERC20_BALANCE_OF_ABI,
+          functionName: 'balanceOf',
+          args: [walletAddress as `0x${string}`],
         })
-        return formatUnits(raw, token.decimals ?? 18)
+        const formatted = formatUnits(raw, token.decimals ?? 18)
+        console.log('[balance] erc20 balance', { chain: token.chain, token: token.address, raw: raw.toString(), formatted })
+        return formatted
+      } catch (err) {
+        console.error('[balance] RPC error', { chain: token.chain, error: err })
+        throw err
       }
-
-      const raw = await client.readContract({
-        address: token.address as `0x${string}`,
-        abi: ERC20_BALANCE_OF_ABI,
-        functionName: 'balanceOf',
-        args: [walletAddress as `0x${string}`],
-      })
-      return formatUnits(raw, token.decimals ?? 18)
     },
     enabled: !!walletAddress && !!token && !!CHAIN_MAP[token.chain],
     staleTime: 15_000,
     refetchInterval: 30_000,
-    retry: 1,
+    retry: 2,
   })
 }

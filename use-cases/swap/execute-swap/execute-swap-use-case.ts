@@ -4,6 +4,13 @@ import { createResultSchema, ZodFunctionResult } from '@/utilities/function-resu
 import { swapResponseSchema } from '@/repositories/swap/swap-schema'
 import { captureError } from '@/utilities/error'
 
+const ERROR_MESSAGES: Record<string, string> = {
+  insufficientBalance: 'Insufficient balance',
+  invalidRoute: 'Route expired, try again',
+  slippageExceeded: 'Slippage too high',
+  notEnoughGas: 'Not enough gas',
+}
+
 export const ExecuteSwapUseCaseArgsSchema = z.object({
   routeId: z.string().min(1),
   sourceAddress: z.string().min(1),
@@ -44,11 +51,10 @@ export async function executeSwapUseCase({
       const body = await response.text().catch(() => '')
       log?.error({ status: response.status, body }, 'SwapKit swap API returned error')
 
-      // Extract human-readable message from JSON error body
       let message = `Swap failed: ${response.statusText}`
       try {
         const parsed = JSON.parse(body)
-        if (parsed.message) message = parsed.message
+        message = ERROR_MESSAGES[parsed.error] ?? parsed.message ?? message
       } catch {
         // body wasn't JSON, keep default message
       }
