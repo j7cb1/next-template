@@ -21,20 +21,20 @@ const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: 'Cryptocurrency NZ | Swap',
+    default: 'Cryptocurrency NZ — Swap Tokens Instantly Across Chains',
     template: '%s | Cryptocurrency NZ',
   },
-  description: 'Swap tokens instantly across chains on Cryptocurrency NZ',
+  description: 'Swap tokens across multiple blockchains with the best rates. Fast, secure cross-chain swaps for Ethereum, Polygon, Arbitrum, Base, and more — built for New Zealand.',
   openGraph: {
-    title: 'Cryptocurrency NZ | Swap',
-    description: 'Swap tokens instantly across chains on Cryptocurrency NZ',
+    title: 'Cryptocurrency NZ — Swap Tokens Instantly Across Chains',
+    description: 'Swap tokens across multiple blockchains with the best rates. Fast, secure cross-chain swaps for Ethereum, Polygon, Arbitrum, Base, and more — built for New Zealand.',
     siteName: 'Cryptocurrency NZ',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Cryptocurrency NZ | Swap',
-    description: 'Swap tokens instantly across chains on Cryptocurrency NZ',
+    title: 'Cryptocurrency NZ — Swap Tokens Instantly Across Chains',
+    description: 'Swap tokens across multiple blockchains with the best rates. Fast, secure cross-chain swaps for Ethereum, Polygon, Arbitrum, Base, and more — built for New Zealand.',
   },
 };
 
