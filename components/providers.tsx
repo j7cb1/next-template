@@ -4,7 +4,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { WagmiProvider } from 'wagmi'
 import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit'
 import { getQueryClient } from '@/lib/query-client'
-import { wagmiConfig } from '@/lib/wagmi-config'
+import { getWagmiConfig } from '@/lib/wagmi-config'
 import { PostHogProvider } from '@/components/providers/posthog-provider'
 import { CurrencyProvider } from '@/hooks/use-currency'
 
@@ -16,6 +16,7 @@ type ProvidersProps = {
 
 export function Providers({ children }: ProvidersProps) {
   const queryClient = getQueryClient()
+  const wagmiConfig = getWagmiConfig()
 
   return (
     <PostHogProvider>
