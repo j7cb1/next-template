@@ -1,8 +1,9 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import { TokenSelector } from './token-selector'
 import { Skeleton } from '@/components/ui/skeleton'
+import { HyperText } from '@/components/ui/hyper-text'
 import { useCurrency } from '@/hooks/use-currency'
 import type { Token } from '@/repositories/swap/swap-schema'
 import { cn } from '@/utilities/shadcn'
@@ -62,7 +63,7 @@ export function TokenInput({
   return (
     <div
       className={cn(
-        'bg-black/30 rounded-2xl p-4 transition-colors',
+        'bg-muted/50 dark:bg-black/30 rounded-2xl p-4 transition-colors',
         'focus-within:ring-1 focus-within:ring-emerald-600/20',
         className,
       )}
@@ -84,9 +85,7 @@ export function TokenInput({
         />
         <div className="flex-1 min-w-0 flex flex-col items-end gap-0.5">
           {readOnly ? (
-            isLoadingQuote ? (
-              <Skeleton className="h-8 w-28 rounded-lg" />
-            ) : error ? (
+            error ? (
               <div className="w-full text-right text-sm font-medium text-muted-foreground/60 truncate">
                 {error}
               </div>
@@ -94,10 +93,12 @@ export function TokenInput({
               <div
                 className={cn(
                   'w-full text-right text-2xl font-semibold tracking-tight tabular-nums truncate',
-                  amount ? 'text-foreground' : 'text-muted-foreground/40',
+                  isLoadingQuote ? 'text-muted-foreground/40' : amount ? 'text-foreground' : 'text-muted-foreground/40',
                 )}
               >
-                {amount || '0.0'}
+                <HyperText scrambling={isLoadingQuote} className="justify-end">
+                  {amount || '0.0'}
+                </HyperText>
               </div>
             )
           ) : (

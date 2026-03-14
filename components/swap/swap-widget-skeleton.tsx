@@ -2,7 +2,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 export function SwapWidgetSkeleton() {
   return (
-    <div className="rounded-xl border border-emerald-600/20 bg-card/80 backdrop-blur-sm text-card-foreground overflow-hidden shadow-[0_0_40px_rgba(5,150,105,0.06)]">
+    <div className="rounded-xl border border-border bg-card/80 backdrop-blur-sm text-card-foreground overflow-hidden shadow-[0_0_40px_rgba(5,150,105,0.06)]">
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-5 pb-4">
         <Skeleton className="h-5 w-14" />
@@ -13,7 +13,7 @@ export function SwapWidgetSkeleton() {
       <div className="px-4 pb-1">
         <div className="flex flex-col">
           {/* From */}
-          <div className="bg-black/20 border border-white/[0.06] rounded-lg p-4">
+          <div className="bg-muted/50 dark:bg-black/20 border border-border rounded-lg p-4">
             <Skeleton className="h-3 w-16 mb-3" />
             <div className="flex items-center gap-3">
               <Skeleton className="h-10 w-24" />
@@ -27,7 +27,7 @@ export function SwapWidgetSkeleton() {
           </div>
 
           {/* To */}
-          <div className="bg-black/20 border border-white/[0.06] rounded-lg p-4">
+          <div className="bg-muted/50 dark:bg-black/20 border border-border rounded-lg p-4">
             <Skeleton className="h-3 w-20 mb-3" />
             <div className="flex items-center gap-3">
               <Skeleton className="h-10 w-24" />

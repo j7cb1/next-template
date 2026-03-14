@@ -20,7 +20,7 @@ export function CurrencySelector() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="flex items-center gap-1.5 rounded-full bg-card/80 backdrop-blur-sm border border-white/[0.08] px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-white/[0.15] transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
+        className="flex items-center gap-1.5 rounded-full bg-card/80 backdrop-blur-sm border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
         aria-label="Select display currency"
       >
         <span>{currency.flag}</span>

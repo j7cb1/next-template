@@ -435,7 +435,7 @@ export function TokenSelector({
           <button
             type="button"
             aria-label={selectedToken ? `Select token: ${selectedToken.ticker} on ${getChainMeta(selectedToken.chain).name}` : 'Select token'}
-            className="inline-flex items-center gap-2.5 shrink-0 h-auto py-1.5 px-2.5 pr-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.10] transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2.5 shrink-0 h-auto py-1.5 px-2.5 pr-3 rounded-xl bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.06] dark:hover:bg-white/[0.10] transition-colors cursor-pointer"
           />
         }
       >

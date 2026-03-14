@@ -23,7 +23,7 @@ export function SwapDirectionButton({
           'absolute -translate-y-1/2',
           'flex items-center justify-center',
           'size-9 rounded-xl',
-          'bg-card/90 border border-white/[0.06]',
+          'bg-card/90 border border-border',
           'text-emerald-400',
           'transition-all duration-200',
           'hover:bg-card hover:text-emerald-300',

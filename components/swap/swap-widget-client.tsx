@@ -234,7 +234,7 @@ export function SwapWidgetClient() {
 
   return (
     <>
-    <div className="rounded-3xl bg-card/90 backdrop-blur-sm text-card-foreground overflow-hidden border border-white/[0.08] shadow-[0_0_60px_rgba(5,150,105,0.06)]">
+    <div className="rounded-3xl bg-card/90 backdrop-blur-sm text-card-foreground overflow-hidden border border-border shadow-[0_0_60px_rgba(5,150,105,0.06)]">
       {/* Header */}
       <div className="flex items-center justify-end px-5 pt-5 pb-2">
         <WalletStatus />

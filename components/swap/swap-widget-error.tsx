@@ -10,7 +10,7 @@ type SwapWidgetErrorProps = {
 
 export function SwapWidgetError({ error, reset }: SwapWidgetErrorProps) {
   return (
-    <div className="rounded-xl border border-emerald-600/20 bg-card/80 backdrop-blur-sm text-card-foreground overflow-hidden shadow-[0_0_40px_rgba(5,150,105,0.06)]">
+    <div className="rounded-xl border border-border bg-card/80 backdrop-blur-sm text-card-foreground overflow-hidden shadow-[0_0_40px_rgba(5,150,105,0.06)]">
       <div className="flex flex-col items-center justify-center gap-4 px-5 py-16">
         <IconAlertTriangle className="size-10 text-destructive" />
         <div className="text-center space-y-1">
