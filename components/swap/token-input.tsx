@@ -3,6 +3,7 @@
 import { useCallback } from 'react'
 import { TokenSelector } from './token-selector'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useCurrency } from '@/hooks/use-currency'
 import type { Token } from '@/repositories/swap/swap-schema'
 import { cn } from '@/utilities/shadcn'
 
@@ -48,6 +49,7 @@ export function TokenInput({
   error,
   className,
 }: TokenInputProps) {
+  const { currency } = useCurrency()
   const handleAmountChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!onAmountChange) return
@@ -109,12 +111,12 @@ export function TokenInput({
               className="w-full bg-transparent text-right text-2xl font-semibold tracking-tight tabular-nums outline-none placeholder:text-muted-foreground/40"
             />
           )}
-          {/* USD value */}
+          {/* Fiat value */}
           {isLoadingQuote ? (
             <Skeleton className="h-4 w-14 rounded" />
           ) : (
             <span className="text-xs text-muted-foreground tabular-nums h-4">
-              {error ? '' : usdValue ? `~${usdValue}` : '$0.00'}
+              {error ? '' : usdValue ? `~${usdValue}` : `${currency.symbol}0.00`}
             </span>
           )}
         </div>

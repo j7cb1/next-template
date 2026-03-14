@@ -1,3 +1,5 @@
+import { CurrencySelector } from '@/components/swap/currency-selector'
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <main className="min-h-screen flex items-center justify-center px-4 py-8 sm:py-12 relative">
@@ -16,6 +18,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </filter>
         <rect width="100%" height="100%" filter="url(#noise)" />
       </svg>
+      {/* Currency selector - top right */}
+      <div className="fixed top-4 right-4 z-10">
+        <CurrencySelector />
+      </div>
       {children}
     </main>
   )

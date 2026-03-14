@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { IconGasStation, IconChevronDown } from '@tabler/icons-react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useFormatCurrency } from '@/hooks/use-format-currency'
 import { cn } from '@/utilities/shadcn'
 import type { QuoteRoute } from '@/repositories/swap/swap-schema'
 import type { Token } from '@/repositories/swap/swap-schema'
@@ -48,6 +49,7 @@ function ValueOrSkeleton({ loading, width = 'w-16', children }: { loading?: bool
 }
 
 export function SwapDetails({ route, fromToken, toToken, sellAmount, slippage, onSlippageChange, open, onOpenChange, isLoading }: SwapDetailsProps) {
+  const formatCurrency = useFormatCurrency()
   const [editingSlippage, setEditingSlippage] = useState(false)
   const [customValue, setCustomValue] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -122,7 +124,7 @@ export function SwapDetails({ route, fromToken, toToken, sellAmount, slippage, o
       >
         <ValueOrSkeleton loading={loading} width="w-12">
           <span className="tabular-nums font-medium">
-            {gasFeeUsd < 0.01 ? '<$0.01' : `$${formatNumber(gasFeeUsd, 2)}`}
+            {formatCurrency(gasFeeUsd)}
           </span>
         </ValueOrSkeleton>
         <IconGasStation className="size-3.5" aria-hidden={true} />
@@ -229,7 +231,7 @@ export function SwapDetails({ route, fromToken, toToken, sellAmount, slippage, o
                 <span className="text-muted-foreground">Network fee</span>
                 <ValueOrSkeleton loading={loading} width="w-14">
                   <span className="text-muted-foreground/80 tabular-nums">
-                    {gasFeeUsd < 0.01 ? '<$0.01' : `$${formatNumber(gasFeeUsd, 2)}`}
+                    {formatCurrency(gasFeeUsd)}
                   </span>
                 </ValueOrSkeleton>
               </div>

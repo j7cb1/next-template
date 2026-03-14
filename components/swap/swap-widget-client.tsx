@@ -16,6 +16,7 @@ import { useTrackSwap } from '@/use-cases/swap/track-swap/use-track-swap'
 import { useWalletBalance } from '@/hooks/use-wallet-balance'
 import { useDebounce } from '@/hooks/use-debounce'
 import { cn } from '@/utilities/shadcn'
+import { useFormatCurrency } from '@/hooks/use-format-currency'
 import type { Token, TransactionStatusValue } from '@/repositories/swap/swap-schema'
 import { IconWallet } from '@tabler/icons-react'
 
@@ -55,16 +56,12 @@ const GLOW_TAP = {
   boxShadow: '0 0 12px rgba(16,185,129,0.15), 0 1px 2px rgba(0,0,0,0.10), inset 0 2px 4px rgba(0,0,0,0.25)',
 }
 
-function formatUsd(value: number): string {
-  if (value < 0.01) return '<$0.01'
-  return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-}
-
 export function SwapWidgetClient() {
   const { address: walletAddress, isConnected } = useAccount()
   const { data: walletClient } = useWalletClient()
   const { openConnectModal } = useConnectModal()
   const prefersReducedMotion = useReducedMotion()
+  const formatCurrency = useFormatCurrency()
   const tokensQuery = useSupportedTokens()
 
   const [fromTokenState, setFromToken] = useState<Token | null>(null)
@@ -108,26 +105,26 @@ export function SwapWidgetClient() {
   const bestRoute = quoteQuery.data?.routes?.[0]
   const receiveAmount = bestRoute?.expectedBuyAmount ?? ''
 
-  // USD values from quote meta.assets
-  const sellUsd = useMemo(() => {
+  // Fiat values from quote meta.assets, converted to selected currency
+  const sellFiat = useMemo(() => {
     const assets = bestRoute?.meta?.assets
     if (!assets) return undefined
     const sellMeta = assets.find((a) => a.asset === fromToken?.identifier)
     const price = sellMeta?.price
     const qty = parseFloat(amount)
     if (!price || !qty) return undefined
-    return formatUsd(price * qty)
-  }, [bestRoute, amount, fromToken])
+    return formatCurrency(price * qty)
+  }, [bestRoute, amount, fromToken, formatCurrency])
 
-  const buyUsd = useMemo(() => {
+  const buyFiat = useMemo(() => {
     const assets = bestRoute?.meta?.assets
     if (!assets) return undefined
     const buyMeta = assets.find((a) => a.asset === toToken?.identifier)
     const price = buyMeta?.price
     const qty = parseFloat(receiveAmount)
     if (!price || !qty) return undefined
-    return formatUsd(price * qty)
-  }, [bestRoute, receiveAmount, toToken])
+    return formatCurrency(price * qty)
+  }, [bestRoute, receiveAmount, toToken, formatCurrency])
 
   const isQuoteLoading = quoteQuery.isFetching && !!debouncedAmount && parseFloat(debouncedAmount) > 0
 
@@ -246,7 +243,7 @@ export function SwapWidgetClient() {
             disabledToken={toToken}
             isLoadingTokens={tokensQuery.isLoading}
             isLoadingQuote={isQuoteLoading}
-            usdValue={quoteError ? undefined : sellUsd}
+            usdValue={quoteError ? undefined : sellFiat}
           />
 
           <SwapDirectionButton
@@ -264,7 +261,7 @@ export function SwapWidgetClient() {
             disabledToken={fromToken}
             isLoadingTokens={tokensQuery.isLoading}
             isLoadingQuote={isQuoteLoading}
-            usdValue={buyUsd}
+            usdValue={buyFiat}
             error={quoteError}
           />
         </div>
