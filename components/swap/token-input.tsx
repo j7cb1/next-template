@@ -24,6 +24,16 @@ type TokenInputProps = {
   className?: string
 }
 
+function truncateAmount(value: string): string {
+  if (!value) return value
+  const num = parseFloat(value)
+  if (isNaN(num)) return value
+  if (num >= 1000) return num.toLocaleString('en-US', { maximumFractionDigits: 2 })
+  if (num >= 1) return num.toLocaleString('en-US', { maximumFractionDigits: 4 })
+  if (num >= 0.0001) return num.toLocaleString('en-US', { maximumFractionDigits: 6 })
+  return num.toLocaleString('en-US', { maximumFractionDigits: 8 })
+}
+
 function sanitizeDecimalInput(value: string): string {
   if (value === '') return ''
   if (value === '.') return '0.'
@@ -97,7 +107,7 @@ export function TokenInput({
                 )}
               >
                 <HyperText scrambling={isLoadingQuote} className="justify-end">
-                  {amount || '0.0'}
+                  {truncateAmount(amount) || '0.0'}
                 </HyperText>
               </div>
             )
