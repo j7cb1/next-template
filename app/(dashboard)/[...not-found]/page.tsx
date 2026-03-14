@@ -1,7 +1,5 @@
-export default function CatchAllNotFound() {
-  return (
-    <div>
+import { notFound } from 'next/navigation'
 
-    </div>
-  )
+export default function CatchAllNotFound() {
+  notFound()
 }
