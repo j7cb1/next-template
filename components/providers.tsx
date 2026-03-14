@@ -7,6 +7,7 @@ import { getQueryClient } from '@/lib/query-client'
 import { getWagmiConfig } from '@/lib/wagmi-config'
 import { PostHogProvider } from '@/components/providers/posthog-provider'
 import { CurrencyProvider } from '@/hooks/use-currency'
+import { ActivityProvider } from '@/hooks/use-ui-activity'
 
 import '@rainbow-me/rainbowkit/styles.css'
 
@@ -24,7 +25,9 @@ export function Providers({ children }: ProvidersProps) {
         <QueryClientProvider client={queryClient}>
           <RainbowKitProvider theme={darkTheme({ accentColor: '#10b981' })}>
             <CurrencyProvider>
-              {children}
+              <ActivityProvider>
+                {children}
+              </ActivityProvider>
             </CurrencyProvider>
           </RainbowKitProvider>
         </QueryClientProvider>

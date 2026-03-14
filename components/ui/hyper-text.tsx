@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 
 import { cn } from "@/utilities/shadcn"
+import { useActivitySignal } from "@/hooks/use-ui-activity"
 
 const HEX_CHARS = "0123456789ABCDEF"
 const SCRAMBLE_LENGTH = 8
@@ -35,6 +36,8 @@ export function HyperText({
   const phaseStartRef = useRef(0)
   const phaseRef = useRef<Phase>("idle")
   const frozenTextRef = useRef("") // snapshot of text when dissolve starts
+  const { increment, decrement } = useActivitySignal()
+  const activeRef = useRef(false)
 
   const cleanup = () => {
     if (rafRef.current) {
@@ -46,7 +49,15 @@ export function HyperText({
   useEffect(() => {
     cleanup()
 
+    const signalActive = () => {
+      if (!activeRef.current) { activeRef.current = true; increment() }
+    }
+    const signalIdle = () => {
+      if (activeRef.current) { activeRef.current = false; decrement() }
+    }
+
     if (scrambling) {
+      signalActive()
       // Capture current display to dissolve from
       const currentText = frozenTextRef.current || display
       frozenTextRef.current = currentText
@@ -111,7 +122,7 @@ export function HyperText({
         rafRef.current = requestAnimationFrame(tick)
       }
     } else if (children) {
-      // Resolve mode — grow visible length toward target, lock chars left to right
+      signalActive()
       phaseRef.current = "resolving"
       phaseStartRef.current = 0
       const target = children
@@ -147,6 +158,7 @@ export function HyperText({
           frozenTextRef.current = target
           phaseRef.current = "idle"
           rafRef.current = null
+          signalIdle()
         }
       }
       rafRef.current = requestAnimationFrame(tick)
@@ -154,9 +166,10 @@ export function HyperText({
       phaseRef.current = "idle"
       setDisplay("")
       frozenTextRef.current = ""
+      signalIdle()
     }
 
-    return cleanup
+    return () => { cleanup(); signalIdle() }
   }, [scrambling, children])
 
   return (
