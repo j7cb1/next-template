@@ -1,6 +1,6 @@
 # Codebase Patterns
 
-> Last updated: 2025-12-22
+> Last updated: 2026-03-08
 
 ## FunctionResult Pattern
 
@@ -197,6 +197,14 @@ components/{domain}/
 
 **Implementation**: `use-cases/*-query-key.ts`
 
+**Rules** (from TanStack Query best practices audit):
+1. Always use arrays for keys
+2. Include all variables the query depends on
+3. Organize hierarchically: `['entity', subEntity?, filters?]`
+4. Use factory functions in dedicated `*-query-key.ts` files
+5. **Never use empty string fallbacks** — use unique pending keys instead
+6. All key parts must be JSON-serializable
+
 ```typescript
 // Hierarchical keys
 export const getProductsQueryKey = () => ['products']
@@ -205,6 +213,30 @@ export const getProductQueryKey = (id: string) => ['products', id]
 // With filters
 export const getLicensesQueryKey = (filters?: LicenseFilters) =>
   ['licenses', filters ?? {}]
+
+// ✅ Correct — unique pending key when dependencies are undefined
+export const getBalanceQueryKey = (address?: string, token?: string) =>
+  address && token ? ['wallet', 'balance', address, token] : ['wallet', 'balance', 'pending']
+
+// ❌ Wrong — empty string fallback causes cache collisions
+export const getBalanceQueryKeyBad = (address?: string) =>
+  ['wallet', 'balance', address ?? '']
+```
+
+## Mutation Invalidation Pattern
+
+**Purpose**: Keep cache fresh after data mutations.
+
+**Rules**: Always invalidate related queries after mutations using `onSuccess`/`onSettled`.
+
+```typescript
+const queryClient = useQueryClient()
+return useMutation({
+  mutationFn: executeAction,
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['related-entity'] })
+  },
+})
 ```
 
 ---
@@ -257,3 +289,69 @@ log.error({ err, licenseId }, 'Failed to create license')
 1. Create logger in actions, pass to use cases
 2. Always include relevant IDs in context
 3. Log at start and completion of operations
+
+---
+
+## React 19 Component Pattern
+
+**Purpose**: Follow React 19 APIs and Vercel composition best practices.
+
+**Rules**:
+1. **No `forwardRef`** — Pass `ref` as a regular prop in React 19
+2. **Use `use()` over `useContext()`** — React 19's `use()` API is preferred
+3. **No boolean prop proliferation** — Create explicit variant components instead
+4. **Children over render props** — Use `children` for composition
+
+```typescript
+// ✅ React 19 — ref as prop, use() for context
+function FormItem({ className, ref, ...props }: Props & { ref?: React.Ref<HTMLDivElement> }) {
+  const context = use(FormItemContext)
+  return <div ref={ref} className={cn('space-y-2', className)} {...props} />
+}
+
+// ❌ Pre-React 19 — avoid these patterns
+const FormItem = React.forwardRef<HTMLDivElement, Props>(({ className, ...props }, ref) => {
+  const context = React.useContext(FormItemContext)
+  return <div ref={ref} />
+})
+```
+
+---
+
+## Accessibility Pattern
+
+**Purpose**: Web Interface Guidelines compliance for all UI components.
+
+**Rules**:
+1. Icon-only buttons must have `aria-label`
+2. Form inputs must have `<label>` or `aria-label`
+3. Decorative icons must have `aria-hidden="true"`
+4. All animations must honor `prefers-reduced-motion`
+5. Use semantic HTML (`<button>` for actions, `<a>`/`<Link>` for navigation)
+6. Every interactive element needs visible `focus-visible` state
+7. Use `tabular-nums` for number columns and financial data
+8. Images need explicit `width`/`height`; below-fold images use `loading="lazy"`
+
+---
+
+## Animation Pattern
+
+**Purpose**: Performant, accessible animations.
+
+**Rules**:
+1. Extract animation objects to `useMemo` or module-level constants (avoid inline re-creation)
+2. Use Framer Motion's `reducedMotion="user"` or CSS `@media (prefers-reduced-motion: reduce)`
+3. Animate only `transform`/`opacity` for compositor-friendly performance
+4. Never use `transition: all` — list properties explicitly
+5. Animations should be interruptible
+
+```typescript
+// ✅ Correct — hoisted animation config
+const GLOW_ANIMATION = { boxShadow: ['0 0 20px ...', '0 0 28px ...', '0 0 20px ...'] }
+const GLOW_TRANSITION = { duration: 2.5, repeat: Infinity }
+
+<motion.button animate={canSwap ? GLOW_ANIMATION : undefined} transition={GLOW_TRANSITION} />
+
+// ❌ Wrong — inline object recreated every render
+<motion.button animate={canSwap ? { boxShadow: [...] } : { boxShadow: 'none' }} />
+```

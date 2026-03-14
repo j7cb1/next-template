@@ -18,6 +18,7 @@ export function SwapDirectionButton({
       <motion.button
         type="button"
         onClick={onClick}
+        aria-label="Swap token direction"
         className={cn(
           'absolute -translate-y-1/2',
           'flex items-center justify-center',

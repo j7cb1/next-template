@@ -4,7 +4,9 @@ import { getTrackSwapQueryKey } from './track-swap-query-key'
 
 export function useTrackSwap(hash: string | null, chainId: string | null) {
   return useQuery({
-    queryKey: getTrackSwapQueryKey(hash ?? '', chainId ?? ''),
+    queryKey: hash && chainId
+      ? getTrackSwapQueryKey(hash, chainId)
+      : ['swap', 'track', 'pending'],
     queryFn: async () => {
       const { data, error } = await trackSwapAction({
         hash: hash!,

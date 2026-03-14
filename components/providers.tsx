@@ -1,9 +1,13 @@
 'use client'
 
 import { QueryClientProvider } from '@tanstack/react-query'
+import { WagmiProvider } from 'wagmi'
+import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit'
 import { getQueryClient } from '@/lib/query-client'
-import { DynamicProvider } from '@/components/providers/dynamic-provider'
+import { wagmiConfig } from '@/lib/wagmi-config'
 import { PostHogProvider } from '@/components/providers/posthog-provider'
+
+import '@rainbow-me/rainbowkit/styles.css'
 
 type ProvidersProps = {
   children: React.ReactNode
@@ -14,11 +18,13 @@ export function Providers({ children }: ProvidersProps) {
 
   return (
     <PostHogProvider>
-      <DynamicProvider>
+      <WagmiProvider config={wagmiConfig}>
         <QueryClientProvider client={queryClient}>
-          {children}
+          <RainbowKitProvider theme={darkTheme({ accentColor: '#10b981' })}>
+            {children}
+          </RainbowKitProvider>
         </QueryClientProvider>
-      </DynamicProvider>
+      </WagmiProvider>
     </PostHogProvider>
   )
 }

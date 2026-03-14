@@ -62,6 +62,7 @@ function ChainIcon({ chainKey, size = 16 }: { chainKey: string; size?: number })
       alt={meta.name}
       width={size}
       height={size}
+      loading="lazy"
       className="shrink-0 rounded-full"
       onError={(e) => {
         const target = e.currentTarget
@@ -100,6 +101,7 @@ function ChainBadge({ chainKey, size = 14 }: { chainKey: string; size?: number }
         alt={meta.name}
         width={size}
         height={size}
+        loading="lazy"
         className="absolute -bottom-0.5 -right-0.5 rounded-full ring-[1.5px] ring-background"
         onError={(e) => {
           const target = e.currentTarget
@@ -136,6 +138,7 @@ function TokenIcon({ token, size = 32 }: { token: Token; size?: number }) {
           alt={token.ticker}
           width={size}
           height={size}
+          loading="lazy"
           className="shrink-0 rounded-full"
           onError={(e) => {
             const target = e.currentTarget
@@ -254,7 +257,7 @@ function NetworkBar({
             }
           >
             +{overflowChains.length}
-            <IconChevronDown className="size-3 text-muted-foreground/60" />
+            <IconChevronDown className="size-3 text-muted-foreground/60" aria-hidden={true} />
           </PopoverTrigger>
           <PopoverContent
             align="end"
@@ -458,7 +461,7 @@ export function TokenSelector({
         ) : (
           <span className="text-sm font-semibold text-muted-foreground">Select token</span>
         )}
-        <IconChevronDown className="size-4 text-muted-foreground/60 shrink-0" />
+        <IconChevronDown className="size-4 text-muted-foreground/60 shrink-0" aria-hidden={true} />
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden flex flex-col max-h-[min(85vh,600px)]">

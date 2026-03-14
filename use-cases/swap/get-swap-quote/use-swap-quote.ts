@@ -13,7 +13,9 @@ export function useSwapQuote({ sellAsset, buyAsset, sellAmount, slippage = 3 }: 
   const enabled = !!sellAsset && !!buyAsset && !!sellAmount && parseFloat(sellAmount) > 0
 
   return useQuery({
-    queryKey: getSwapQuoteQueryKey(sellAsset ?? '', buyAsset ?? '', sellAmount, slippage),
+    queryKey: sellAsset && buyAsset
+      ? getSwapQuoteQueryKey(sellAsset, buyAsset, sellAmount, slippage)
+      : ['swap', 'quote', 'pending'],
     queryFn: async () => {
       const { data, error } = await getSwapQuoteAction({
         sellAsset: sellAsset!,

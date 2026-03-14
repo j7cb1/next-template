@@ -189,6 +189,70 @@ const [result1, result2] = await Promise.all([
 - Use `getQueryClient()` for server-side caching
 - Query keys should be consistent and hierarchical
 - TanStack Query deduplicates requests automatically
+- Wrap use-case functions with `React.cache()` for per-request deduplication on the server
+
+### Query Keys (TanStack Query Best Practices)
+
+- **Always use arrays** — `['entity', id]` not `'entity-${id}'`
+- **Include all dependencies** — Every variable the query depends on must be in the key
+- **Hierarchical organization** — `['entity', subEntity?, filters?]` enables targeted invalidation
+- **Use factory functions** — Centralize in `*-query-key.ts` files to prevent typos
+- **Never use empty string fallbacks** — When a dependency is undefined, use a unique pending key (e.g., `['entity', 'pending']`) instead of `['entity', '']` to avoid cache collisions
+- **All key parts must be JSON-serializable** — No functions or class instances in keys
+
+```typescript
+// ✅ Correct — unique pending key
+queryKey: walletAddress && identifier
+  ? ['wallet', 'balance', walletAddress, identifier]
+  : ['wallet', 'balance', 'pending'],
+
+// ❌ Wrong — empty string fallback causes cache collisions
+queryKey: ['wallet', 'balance', walletAddress ?? '', identifier ?? ''],
+```
+
+### Mutations (TanStack Query Best Practices)
+
+- **Always invalidate related queries after mutations** — Use `queryClient.invalidateQueries()` in `onSuccess`/`onSettled`
+- **Implement optimistic updates** for responsive UI where appropriate
+- **Provide rollback context** from `onMutate` for optimistic updates
+- **Handle errors gracefully** — Show user-facing error messages via toast
+- **Use `isPending`** for mutation loading states
+
+```typescript
+// ✅ Correct — invalidate cache after mutation
+const queryClient = useQueryClient()
+return useMutation({
+  mutationFn: executeSwap,
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['wallet', 'balance'] })
+    queryClient.invalidateQueries({ queryKey: ['swap', 'quote'] })
+  },
+})
+```
+
+### QueryClient Defaults
+
+Set explicit defaults in `lib/query-client.ts`:
+
+```typescript
+new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000,       // 1 minute default
+      gcTime: 10 * 60 * 1000,     // 10 minutes - explicit, not framework default
+    },
+  },
+})
+```
+
+Configure per-query overrides based on data volatility:
+
+| Data Type | staleTime | gcTime | Rationale |
+|-----------|-----------|--------|-----------|
+| Reference data (token lists) | 1 hour | 24 hours | Rarely changes |
+| Prices/quotes | 30 seconds | 5 minutes | Time-sensitive |
+| Wallet balances | 15 seconds | 5 minutes | Updates periodically |
+| Transaction status | 0 (always fresh) | 5 minutes | Real-time |
 
 ### Concurrent Data Fetching
 
@@ -207,6 +271,7 @@ const [userResult, profileResult] = await Promise.all([
 - Always include `captureError(err)` in catch blocks
 - Provide meaningful error messages
 - Include relevant context in error logs
+- Configure retry logic per query — disable retries for time-sensitive data (quotes), use 1-2 retries for balance checks
 
 ### Type Safety
 

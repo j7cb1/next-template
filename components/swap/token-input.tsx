@@ -105,6 +105,7 @@ export function TokenInput({
               placeholder="0.0"
               value={amount}
               onChange={handleAmountChange}
+              aria-label="Token amount"
               className="w-full bg-transparent text-right text-2xl font-semibold tracking-tight tabular-nums outline-none placeholder:text-muted-foreground/40"
             />
           )}

@@ -56,7 +56,9 @@ export function useWalletBalance(
   const isErc20 = !!token?.address
 
   return useQuery({
-    queryKey: ['wallet', 'balance', walletAddress ?? '', identifier ?? ''],
+    queryKey: walletAddress && identifier
+      ? ['wallet', 'balance', walletAddress, identifier]
+      : ['wallet', 'balance', 'pending'],
     queryFn: async (): Promise<string | undefined> => {
       if (!walletAddress || !token) return undefined
 

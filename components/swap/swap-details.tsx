@@ -22,6 +22,8 @@ type SwapDetailsProps = {
 
 const SLIPPAGE_PRESETS = [1, 3, 5]
 
+const CHEVRON_TRANSITION = { duration: 0.2 }
+
 function formatTime(seconds: number): string {
   if (seconds < 60) return `~${Math.round(seconds)}s`
   const mins = Math.floor(seconds / 60)
@@ -115,6 +117,7 @@ export function SwapDetails({ route, fromToken, toToken, sellAmount, slippage, o
       <button
         type="button"
         onClick={() => onOpenChange(!open)}
+        aria-label="Toggle swap details"
         className="w-full flex items-center gap-1.5 py-1.5 text-xs text-muted-foreground hover:text-foreground/70 transition-colors cursor-pointer"
       >
         <ValueOrSkeleton loading={loading} width="w-12">
@@ -122,13 +125,13 @@ export function SwapDetails({ route, fromToken, toToken, sellAmount, slippage, o
             {gasFeeUsd < 0.01 ? '<$0.01' : `$${formatNumber(gasFeeUsd, 2)}`}
           </span>
         </ValueOrSkeleton>
-        <IconGasStation className="size-3.5" />
+        <IconGasStation className="size-3.5" aria-hidden={true} />
         <motion.div
           animate={{ rotate: open ? 180 : 0 }}
-          transition={{ duration: 0.2 }}
+          transition={CHEVRON_TRANSITION}
           className="ml-auto"
         >
-          <IconChevronDown className="size-3.5" />
+          <IconChevronDown className="size-3.5" aria-hidden={true} />
         </motion.div>
       </button>
 

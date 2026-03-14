@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Account, Chain, Transport, WalletClient } from 'viem'
 import { executeSwapAction } from './execute-swap-action'
 
@@ -11,6 +11,8 @@ type ExecuteSwapParams = {
 }
 
 export function useExecuteSwap() {
+  const queryClient = useQueryClient()
+
   return useMutation({
     mutationFn: async ({
       routeId,
@@ -37,6 +39,10 @@ export function useExecuteSwap() {
       })
 
       return { txHash, chainId: sellChain }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wallet', 'balance'] })
+      queryClient.invalidateQueries({ queryKey: ['swap', 'quote'] })
     },
   })
 }

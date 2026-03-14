@@ -1,7 +1,8 @@
 # Session Context
 
-> Last updated: 2026-01-03
+> Last updated: 2026-03-08
 > Template version: 1.0.0
+> Changes since last update: Full best practices audit (TanStack Query, Composition, React Perf, Design, Web Guidelines)
 
 ## Quick Orientation
 
@@ -83,6 +84,11 @@
 | Soft Delete | All main tables | `deletedAt` timestamp |
 | Server Actions | `*-action.ts` | Client → server bridge |
 | Role-Based Access | `utilities/permissions.ts` | Permission checks |
+| Query Key Factory | `*-query-key.ts` | Centralized cache keys (no empty string fallbacks) |
+| Mutation Invalidation | `use-*.ts` hooks | Always invalidate related queries after mutations |
+| React 19 APIs | All components | No forwardRef, use() over useContext() |
+| Accessibility | All UI components | aria-label, aria-hidden, focus-visible, prefers-reduced-motion |
+| Animation | Framer Motion + CSS | Hoisted configs, reduced motion support |
 
 ---
 

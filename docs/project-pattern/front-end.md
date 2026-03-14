@@ -63,3 +63,33 @@ Each logical feature is typically composed of the following file types:
 4.  **UI/Form Component:** Add `'use client'` if interactive. Build the presentation layer, receiving props from the client component. Implement form logic if needed.
 5.  **Skeleton/Error:** Create simple, stateless components for loading and error fallbacks.
 6.  **Usage:** Import and use the `*-server.tsx` component in the desired page or layout.
+
+## React 19 Component Guidelines
+
+Components must follow React 19 patterns and Vercel best practices:
+
+### Composition Patterns
+
+- **No boolean prop proliferation** — Instead of adding `readOnly`, `isLoading`, `isError` flags, create explicit variant components (e.g., `TokenInputField` vs `TokenOutputField`).
+- **No `forwardRef`** — React 19 passes `ref` as a regular prop. Use `{ ref, ...props }` in the function signature.
+- **Use `use()` over `useContext()`** — React 19's `use()` can be called conditionally and is the preferred API.
+- **Children over render props** — Prefer `children` composition over `renderX` props for flexibility.
+
+### Performance
+
+- **Extract inline animation objects** — Hoist animation config to `useMemo` or module-level constants to avoid re-creation on every render.
+- **No barrel file imports** — Import directly from source files, not `index.ts` barrels.
+- **Wrap server-side use-case functions with `React.cache()`** — Enables per-request deduplication across components.
+- **Use `Promise.all()` for parallel fetches** — Never create sequential await waterfalls for independent data.
+- **Prefer `useTransition`** — For non-urgent updates like debounced search, combine with `startTransition` for better UX feedback.
+
+### Accessibility (Web Interface Guidelines)
+
+- **Icon-only buttons need `aria-label`** — Every `<button>` with only an icon must have an accessible label.
+- **Form inputs need `<label>` or `aria-label`** — No unlabelled inputs.
+- **Decorative icons need `aria-hidden="true"`** — Prevent screen reader noise.
+- **Honor `prefers-reduced-motion`** — All animations must provide reduced motion variants. Use Framer Motion's `reducedMotion="user"` prop or CSS `@media (prefers-reduced-motion: reduce)`.
+- **Semantic HTML first** — Use `<button>` for actions, `<a>`/`<Link>` for navigation. Never `<div onClick>`.
+- **Visible focus states** — Every interactive element needs `focus-visible:ring-*` or equivalent. Never `outline-none` without replacement.
+- **`tabular-nums`** — Use `font-variant-numeric: tabular-nums` for number columns and financial data.
+- **Images need dimensions** — Always set `width` and `height` on `<img>`. Use `loading="lazy"` for below-fold images.

@@ -44,6 +44,40 @@ Forms generally follow the core pattern outlined in the main `frontend-architect
 - **State Separation:** Keep form state (`react-hook-form`) separate from server/submission state (`react-query`).
 - **Component Separation:** Separate the form rendering/input logic (`*-form.tsx`) from the submission/data logic (`*-client.tsx`).
 
+## Form Accessibility (Web Interface Guidelines)
+
+- Every `<input>` must have a `<label htmlFor="...">` or `aria-label`
+- Use correct `type` (`email`, `tel`, `url`, `number`) and `inputmode` attributes
+- Never block paste (`onPaste` + `preventDefault`)
+- Add `spellCheck={false}` on emails, codes, usernames
+- Add `autocomplete` and meaningful `name` attributes
+- Submit button stays enabled until request starts; show spinner during submission
+- Display errors inline next to fields; focus first error on submit
+- Placeholders should end with `…` and show example patterns
+- Warn before navigation with unsaved changes (`beforeunload` or router guard)
+
+## Form Mutation Best Practices (TanStack Query)
+
+- Always invalidate related queries after successful mutation
+- Use `isPending` from mutation hook for loading states
+- Handle errors in both `onError` callback and component-level try/catch
+- For optimistic updates, provide rollback context from `onMutate`
+
+```typescript
+// ✅ Correct mutation with invalidation
+const queryClient = useQueryClient()
+const mutation = useMutation({
+  mutationFn: updateEntityAction,
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['entity'] })
+    toast.success('Updated!')
+  },
+  onError: (err) => {
+    toast.error(err.message || 'Update failed')
+  },
+})
+```
+
 ## Example Flow (User Settings Form)
 
 5.  `UserSettingsClient` renders `<UserSettingsFormUi initialSettings={...} onSubmit={handleSubmit} isSubmitting={mutation.isPending} />`.
