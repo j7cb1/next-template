@@ -17,6 +17,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/utilities/shadcn'
 import { IconChevronDown, IconSearch, IconCheck } from '@tabler/icons-react'
 import { getChainMeta, CHAIN_ORDER } from '@/config/chains'
 import type { Token } from '@/repositories/swap/swap-schema'
@@ -131,30 +132,26 @@ function ChainBadge({ chainKey, size = 14 }: { chainKey: string; size?: number }
 // ---------------------------------------------------------------------------
 
 function TokenIcon({ token, size = 32 }: { token: Token; size?: number }) {
-  if (token.logoURI) {
+  const [loaded, setLoaded] = useState(false)
+  const [errored, setErrored] = useState(false)
+
+  if (token.logoURI && !errored) {
     return (
-      <>
+      <div className="relative shrink-0" style={{ width: size, height: size }}>
+        {!loaded && (
+          <Skeleton className="absolute inset-0 rounded-full" />
+        )}
         <Image
           src={token.logoURI}
           alt={token.ticker}
           width={size}
           height={size}
-          className="shrink-0 rounded-full"
+          className={cn('shrink-0 rounded-full transition-opacity duration-150', loaded ? 'opacity-100' : 'opacity-0')}
           unoptimized={token.logoURI.endsWith('.svg')}
-          onError={(e) => {
-            const target = e.currentTarget
-            target.style.display = 'none'
-            const sibling = target.nextElementSibling as HTMLElement | null
-            if (sibling) sibling.style.display = 'flex'
-          }}
+          onLoad={() => setLoaded(true)}
+          onError={() => setErrored(true)}
         />
-        <div
-          className="shrink-0 rounded-full bg-muted flex items-center justify-center font-medium text-muted-foreground"
-          style={{ width: size, height: size, fontSize: size * 0.375, display: 'none' }}
-        >
-          {token.ticker.slice(0, 2)}
-        </div>
-      </>
+      </div>
     )
   }
 
