@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useCallback, useRef } from 'react'
+import Image from 'next/image'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { motion } from 'framer-motion'
 import {
@@ -57,13 +58,13 @@ function ChainIcon({ chainKey, size = 16 }: { chainKey: string; size?: number })
   }
 
   return (
-    <img
+    <Image
       src={meta.iconUrl}
       alt={meta.name}
       width={size}
       height={size}
-      loading="lazy"
       className="shrink-0 rounded-full"
+      unoptimized={meta.iconUrl.endsWith('.svg')}
       onError={(e) => {
         const target = e.currentTarget
         target.style.display = 'none'
@@ -96,13 +97,13 @@ function ChainBadge({ chainKey, size = 14 }: { chainKey: string; size?: number }
 
   return (
     <>
-      <img
+      <Image
         src={meta.iconUrl}
         alt={meta.name}
         width={size}
         height={size}
-        loading="lazy"
         className="absolute -bottom-0.5 -right-0.5 rounded-full ring-[1.5px] ring-background"
+        unoptimized={meta.iconUrl.endsWith('.svg')}
         onError={(e) => {
           const target = e.currentTarget
           target.style.display = 'none'
@@ -133,13 +134,13 @@ function TokenIcon({ token, size = 32 }: { token: Token; size?: number }) {
   if (token.logoURI) {
     return (
       <>
-        <img
+        <Image
           src={token.logoURI}
           alt={token.ticker}
           width={size}
           height={size}
-          loading="lazy"
           className="shrink-0 rounded-full"
+          unoptimized={token.logoURI.endsWith('.svg')}
           onError={(e) => {
             const target = e.currentTarget
             target.style.display = 'none'
@@ -436,6 +437,7 @@ export function TokenSelector({
         render={
           <button
             type="button"
+            aria-label={selectedToken ? `Select token: ${selectedToken.ticker} on ${getChainMeta(selectedToken.chain).name}` : 'Select token'}
             className="inline-flex items-center gap-2.5 shrink-0 h-auto py-1.5 px-2.5 pr-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.10] transition-colors cursor-pointer"
           />
         }

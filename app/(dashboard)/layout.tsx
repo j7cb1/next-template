@@ -2,7 +2,7 @@ import { CurrencySelector } from '@/components/swap/currency-selector'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <main className="min-h-screen flex items-center justify-center px-4 py-8 sm:py-12 relative">
+    <main id="main-content" className="min-h-screen flex items-center justify-center px-4 py-8 sm:py-12 relative">
       {/* Vignette */}
       <div className="pointer-events-none fixed inset-0 z-0" style={{ background: 'radial-gradient(ellipse at center, transparent 20%, rgba(0,0,0,0.6) 100%)' }} />
       {/* Noise texture overlay */}

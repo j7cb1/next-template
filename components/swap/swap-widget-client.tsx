@@ -72,6 +72,7 @@ export function SwapWidgetClient() {
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [txHash, setTxHash] = useState<string | null>(null)
   const [txChainId, setTxChainId] = useState<string | null>(null)
+  const [statusAnnouncement, setStatusAnnouncement] = useState('')
 
   const tokens = useMemo(
     () => (Array.isArray(tokensQuery.data) ? tokensQuery.data : []),
@@ -157,18 +158,23 @@ export function SwapWidgetClient() {
     switch (status) {
       case 'pending':
         toast.loading('Transaction pending...', { id: 'swap-status' })
+        setStatusAnnouncement('Transaction pending')
         break
       case 'swapping':
         toast.loading('Swap in progress...', { id: 'swap-status' })
+        setStatusAnnouncement('Swap in progress')
         break
       case 'completed':
         toast.success('Swap complete!', { id: 'swap-status' })
+        setStatusAnnouncement('Swap complete')
         break
       case 'failed':
         toast.error('Swap failed', { id: 'swap-status' })
+        setStatusAnnouncement('Swap failed')
         break
       case 'refunded':
         toast.error('Swap refunded', { id: 'swap-status' })
+        setStatusAnnouncement('Swap refunded')
         break
     }
   }, [trackQuery.data?.status])
@@ -177,6 +183,7 @@ export function SwapWidgetClient() {
     if (!bestRoute || !walletAddress || !walletClient || !fromToken || swapMutation.isPending) return
 
     toast.loading('Building transaction...', { id: 'swap-status' })
+    setStatusAnnouncement('Building transaction')
 
     swapMutation.mutate(
       {
@@ -191,9 +198,12 @@ export function SwapWidgetClient() {
           setTxHash(hash)
           setTxChainId(chainId)
           toast.success('Transaction submitted!', { id: 'swap-status' })
+          setStatusAnnouncement('Transaction submitted')
         },
         onError: (err) => {
-          toast.error(err.message || 'Swap failed', { id: 'swap-status' })
+          const msg = err.message || 'Swap failed'
+          toast.error(msg, { id: 'swap-status' })
+          setStatusAnnouncement(msg)
         },
       },
     )
@@ -325,6 +335,10 @@ export function SwapWidgetClient() {
     ) : (
       <div className="mt-3 px-2 h-[30px]" />
     )}
+    {/* Visually hidden live region for screen reader announcements of swap status */}
+    <div aria-live="polite" aria-atomic="true" className="sr-only">
+      {statusAnnouncement}
+    </div>
     </>
   )
 }
