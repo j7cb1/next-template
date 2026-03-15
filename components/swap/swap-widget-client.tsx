@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef, useSyncExternalStore } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useAccount, useWalletClient, useSwitchChain } from 'wagmi'
 import { useConnectModal } from '@rainbow-me/rainbowkit'
@@ -20,6 +20,11 @@ import { cn } from '@/utilities/shadcn'
 import { useFormatCurrency } from '@/hooks/use-format-currency'
 import type { Token, TransactionStatusValue } from '@/repositories/swap/swap-schema'
 import { IconWallet } from '@tabler/icons-react'
+import { Skeleton } from '@/components/ui/skeleton'
+
+const subscribe = () => () => {}
+const getSnapshot = () => true
+const getServerSnapshot = () => false
 
 const DEFAULT_FROM = 'ETH.ETH'
 const DEFAULT_TO = 'ETH.USDC-0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
@@ -51,11 +56,15 @@ const BUTTON_TAP = {
 }
 
 export function SwapWidgetClient() {
-  const { address: walletAddress, isConnected, chainId: walletChainId } = useAccount()
+  const mounted = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+  const { address: walletAddress, isConnected, isReconnecting, status: walletStatus, chainId: walletChainId } = useAccount()
   const { data: walletClient } = useWalletClient()
   const { switchChainAsync } = useSwitchChain()
   const { openConnectModal } = useConnectModal()
   const prefersReducedMotion = useReducedMotion()
+  const [walletSettled, setWalletSettled] = useState(false)
+  useEffect(() => { setWalletSettled(true) }, [])
+  const walletLoading = !mounted || !walletSettled || isReconnecting || walletStatus === 'connecting'
   const formatCurrency = useFormatCurrency()
   const tokensQuery = useSupportedTokens()
 
@@ -291,7 +300,9 @@ export function SwapWidgetClient() {
 
       {/* Action */}
       <div className="px-3 pt-3 pb-4">
-        {!isConnected ? (
+        {walletLoading ? (
+          <Skeleton className="w-full h-12 rounded-2xl" />
+        ) : !isConnected ? (
           <motion.button
             type="button"
             onClick={() => openConnectModal?.()}
