@@ -4,12 +4,12 @@ import { ReactiveGrid } from '@/components/ui/reactive-grid'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <main id="main-content" className="min-h-[100dvh] flex items-center justify-center px-4 py-4 sm:py-12 relative overflow-hidden">
+    <main id="main-content" className="min-h-[100dvh] flex items-center justify-center px-4 py-4 sm:py-12 relative">
       {/* Vignette – dark mode only */}
       <div className="pointer-events-none fixed inset-0 z-0 hidden dark:block" style={{ background: 'radial-gradient(ellipse at center, transparent 20%, rgba(0,0,0,0.6) 100%)' }} />
       {/* Flickering grid — reacts to UI loading states */}
       <div
-        className="fixed inset-0 z-0"
+        className="pointer-events-none fixed inset-0 z-0"
         style={{ maskImage: 'radial-gradient(ellipse at center, black 20%, transparent 70%)' }}
       >
         <ReactiveGrid />
